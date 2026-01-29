@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>新增题目</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('image/bgc.png');
+            /* 设置背景图片 */
+            background-size: cover;
+            /* 背景图片覆盖整个可视区域 */
+            background-position: center;
+            /* 背景图片居中显示 */
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            /* 可以考虑使容器部分背景半透明，以便图片略显 */
+            opacity: 0.95;
+            /* 轻微透明效果 */
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            margin: 10px 0;
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type=text],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        function validateForm() {
+            var title = document.forms["questionForm"]["title"].value;
+            if (title == "") {
+                alert("题目标题必须填写");
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var form = document.querySelector("form");
+            form.onsubmit = function (event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+                if (validateForm()) {
+                    var formData = {
+                        title: document.getElementById('title').value,
+                        star: document.getElementById('star').value,
+                        question_desc: document.getElementById('question_desc').value,
+                        header: document.getElementById('header').value,
+                        tail: document.getElementById('tail').value,
+                        time_limit: document.getElementById('time_limit').value,
+                        mem_limit: document.getElementById('mem_limit').value
+                    };
+                    fetch('/addQuestion', { // 这里的URL需要替换为实际的后端服务URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("新增成功");
+                                window.location.href = '/'; // 跳转到题目列表页面
+                            } else {
+                                alert("新增失败：" + (data.error || "未知错误"));
+                            }
+                        });
+                }
+            };
+        });
+
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>新增题目</h2>
+        <form name="questionForm">
+            <label for="title">题目标题:</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="star">题目难度:</label>
+            <select id="star" name="star" required>
+                <option value="简单">简单</option>
+                <option value="中等">中等</option>
+                <option value="困难">困难</option>
+            </select>
+
+            <label for="question_desc">题目描述:</label>
+            <textarea id="question_desc" name="question_desc" required></textarea>
+
+            <label for="header">题目头部:</label>
+            <textarea id="header" name="header" required></textarea>
+
+            <label for="tail">题目尾部:</label>
+            <textarea id="tail" name="tail" required></textarea>
+
+            <label for="time_limit">时间限制 (秒):</label>
+            <input type="text" id="time_limit" name="time_limit" value="1">
+
+            <label for="mem_limit">空间限制 (字节):</label>
+            <input type="text" id="mem_limit" name="mem_limit" value="5000000">
+
+            <input type="submit" value="提交">
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线OJ-用户列表</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background-image: url('image/bgc.png');
+            /* 设置背景图片 */
+            background-size: cover;
+            /* 背景图片覆盖整个可视区域 */
+            background-position: center;
+            /* 背景图片居中显示 */
+        }
+
+        .container .navbar {
+            width: 100%;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            /* 半透明背景 */
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            /* 添加阴影效果 */
+        }
+
+        .container .navbar a {
+            display: inline-block;
+            width: 100px;
+            /* 调整链接的宽度 */
+            color: white;
+            font-size: large;
+            line-height: 50px;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+            /* 平滑过渡效果 */
+        }
+
+        .container .navbar a:hover {
+            background-color: #4CAF50;
+            /* 鼠标悬停背景色变化 */
+            color: #fff;
+            /* 鼠标悬停字体颜色变化 */
+        }
+
+        .container .navbar .login,
+        .container .navbar .register {
+            float: right;
+        }
+
+        .container .user_list {
+            padding-top: 50px;
+            width: 800px;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        .container .user_list table {
+            width: 100%;
+            font-size: large;
+            margin-top: 50px;
+            background-color: rgb(243, 248, 246);
+        }
+
+        .container .user_list h1 {
+            color: green;
+        }
+
+        .container .footer {
+            width: 100%;
+            height: 50px;
+            text-align: center;
+            line-height: 50px;
+            color: #ccc;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="/">首页</a>
+            <a href="/all_questions">题库</a>
+            <a href="/add_question.html">新增题目</a> <!-- 新增题目链接 -->
+            <a href="/add_user.html">新增用户</a> <!-- 新增用户链接 -->
+            <a onclick="logout()">注销</a>
+        </div>
+        <div class="user_list">
+            <h1>OnlineJuge题目列表</h1>
+            <table>
+                <tr>
+                    <th class="item">编号</th>
+                    <th class="item">姓名</th>
+                    <th class="item">角色</th>
+                    <th class="item">操作</th>
+                    <th class="item">操作</th>
+                </tr>
+                <!-- 假设后端渲染的题目列表 -->
+                {{#user_list}}
+                <tr>
+                    <td class="item">{{number}}</td>
+                    <td class="item"><a href="/user/{{number}}">{{username}}</a></td>
+                    <td class="item">{{isAdmin}}</td>
+                    <td class="item"><a href="javascript:void(0);" onclick="deleteUser('{{number}}')">删除</a></td>
+                    <td class="item"><a href="edit_user.html?number={{number}}">编辑</a></td>
+                </tr>
+                {{/user_list}}
+            </table>
+        </div>
+        <div class="footer">
+            <h4>@YW</h4>
+        </div>
+    </div>
+    <script>
+        function deleteUser(number) {
+            fetch(`/deleteUser/${number}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('删除成功');
+                        // 重新加载页面或更新DOM以反映删除后的状态
+                        location.reload();
+                    } else {
+                        // 删除失败
+                        if (data.error === "Invalid session") {
+                            alert('请先登录');
+                            window.location.href = '/login.html';
+                        } else {
+                            alert('删除失败: ' + data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败: 网络错误');
+                });
+        }
+    </script>
+    <script>
+        // 检测登录状态
+        function checkLoginStatus() {
+            fetch('/check_login', {
+                method: 'GET',
+                credentials: 'include', // 确保携带Cookie
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        const data = text ? JSON.parse(text) : {};
+                        if (data.success === true) {
+                            console.log('用户已登录');
+                        } else {
+                            console.log('用户未登录，需要登录');
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        throw new Error('Failed to parse JSON: ' + error);
+                    }
+                })
+                .catch(error => {
+                    console.error('检测登录状态出错:', error);
+                });
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            checkLoginStatus();
+        });
+    </script>
+    <script>
+        // 注销
+        function logout() {
+            fetch('/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.href = '/';
+                    } else {
+                        alert('注销失败');
+                    }
+                })
+                .catch(error => console.error('注销出错:', error));
+        }
+    </script>
+</body>
+
+</html>

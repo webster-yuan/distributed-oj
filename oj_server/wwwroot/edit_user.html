@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>编辑用户</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('image/bgc.png');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            margin: 10px 0;
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type=text],
+        input[type=password],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        // 获取 URL 参数
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function populateForm(data) {
+            document.getElementById('username').value = data.username;
+            document.getElementById('password').value = "";  // 不预填充密码
+            document.getElementById('role').value = data.role;
+        }
+
+        function fetchUserData(number) {
+            fetch('/getUser?number=' + number)  // 替换为实际的后端 URL
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateForm(data.user);
+                    } else {
+                        alert('无法获取用户信息：' + (data.error || '未知错误'));
+                    }
+                });
+        }
+
+        function validateForm() {
+            var username = document.forms["editUserForm"]["username"].value;
+            var password = document.forms["editUserForm"]["password"].value;
+            if (username == "" || password == "") {
+                alert("用户名和密码必须填写");
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var number = getQueryParam('number');
+            if (number) {
+                fetchUserData(number);
+            }
+        
+            var form = document.querySelector("form");
+            form.onsubmit = function (event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+                if (validateForm()) {
+                    var formData = {
+                        number: number,
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value,
+                        role: document.getElementById('role').value
+                    };
+                    fetch('/editUser', { // 替换为实际的后端 URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData) // 以 JSON 格式发送数据
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("更新成功");
+                            window.location.href = '/'; // 跳转到用户列表页面
+                        } else {
+                            alert("更新失败：" + (data.error || "未知错误"));
+                        }
+                    });
+                }
+            };
+        });
+        
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>编辑用户</h2>
+        <form name="editUserForm">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="role">角色:</label>
+            <select id="role" name="role" required>
+                <option value="admin">管理员</option>
+                <option value="user">普通用户</option>
+            </select>
+
+            <input type="submit" value="提交">
+        </form>
+    </div>
+</body>
+
+</html>

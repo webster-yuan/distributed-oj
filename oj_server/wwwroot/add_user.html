@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>新增用户</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('image/bgc.png');
+            /* 设置背景图片 */
+            background-size: cover;
+            /* 背景图片覆盖整个可视区域 */
+            background-position: center;
+            /* 背景图片居中显示 */
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            /* 可以考虑使容器部分背景半透明，以便图片略显 */
+            opacity: 0.95;
+            /* 轻微透明效果 */
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            margin: 10px 0;
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type=text],
+        input[type=password],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        function validateForm() {
+            var username = document.forms["userForm"]["username"].value;
+            var password = document.forms["userForm"]["password"].value;
+            if (username == "" || password == "") {
+                alert("用户名和密码必须填写");
+                return false;
+            }
+            return true;
+        }
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            var form = document.querySelector("form");
+            form.onsubmit = function (event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+                if (validateForm()) {
+                    var formData = {
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value,
+                        role: document.getElementById('role').value
+                    };
+                    fetch('/addUser', { // 这里的URL需要替换为实际的后端服务URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("新增成功");
+                            window.location.href = '/'; // 跳转到用户列表页面
+                        } else {
+                            alert("新增失败：" + (data.error || "未知错误"));
+                        }
+                    });
+                }
+            };
+        });
+        
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>新增用户</h2>
+        <form name="userForm">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="role">角色:</label>
+            <select id="role" name="role" required>
+                <option value="admin">管理员</option>
+                <option value="user">用户</option>
+            </select>
+
+            <input type="submit" value="提交">
+        </form>
+    </div>
+</body>
+
+</html>

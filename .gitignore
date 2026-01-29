@@ -1,0 +1,32 @@
+# Prerequisites: executables and libraries
+compile_server/compile_server
+oj_server/oj_server
+oj_server/lib/libmysqlclient.so*
+testCode/CinErrorTest
+testCode/test
+testCode/testCtemplate
+testCode/testMD5
+
+# Build artifacts
+*.o
+*.exe
+*.compile_err
+*.stderr
+*.stdin
+*.stdout
+output/
+compile_server/temp/
+temp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

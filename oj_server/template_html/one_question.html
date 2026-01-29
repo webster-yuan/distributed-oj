@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{number}}.{{title}}</title>
+    <!-- 引入ACE插件 -->
+    <script src="http://cdn.bootcss.com/ace/1.2.4/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://cdn.bootcss.com/ace/1.2.4/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+    <!-- 引入jquery CDN -->
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        .container .navbar {
+            width: 100%;
+            height: 50px;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        .container .navbar a {
+            display: inline-block;
+            width: 80px;
+            color: white;
+            font-size: large;
+            line-height: 50px;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .container .navbar a:hover {
+            background-color: green;
+        }
+
+        .container .navbar .login {
+            float: right;
+        }
+
+        .container .part1 {
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .container .part1 .left_desc {
+            width: 50%;
+            height: 600px;
+            float: left;
+            overflow: scroll;
+        }
+
+        .container .part1 .left_desc h3 {
+            padding-top: 10px;
+            padding-left: 10px;
+        }
+
+        .container .part1 .left_desc pre {
+            padding-top: 10px;
+            padding-left: 10px;
+            font-size: medium;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        .container .part1 .right_code {
+            width: 50%;
+            float: right;
+        }
+
+        .container .part1 .right_code .ace_editor {
+            height: 600px;
+        }
+
+        .container .part2 {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .container .part2 .result {
+            width: 300px;
+            float: left;
+        }
+
+        .container .part2 .btn-submit {
+            width: 120px;
+            height: 50px;
+            font-size: large;
+            float: right;
+            background-color: #26bb9c;
+            color: #FFF;
+            border: 0px;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .container .part2 button:hover {
+            color: green;
+        }
+
+        .container .part2 .result {
+            margin-top: 15px;
+            margin-left: 15px;
+        }
+
+        .container .part2 .result pre {
+            font-size: large;
+        }
+
+        .popup {
+            display: none;
+            position: absolute;
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 导航栏， 功能不实现-->
+        <div class="navbar">
+            <a href="/">首页</a>
+            <a href="/all_questions">题库</a>
+            <a onclick="logout()">注销</a>
+            <!-- 显示个人信息 -->
+            <button id="showUserInfoBtn">显示个人信息</button>
+            <div id="personal-tag" class="popup"></div>
+        </div>
+        <!-- 左右呈现，题目描述和预设代码 -->
+        <div class="part1">
+            <div class="left_desc">
+                <h3><span id="number">{{number}}</span>.{{title}}_{{star}}</h3>
+                <pre>{{desc}}</pre>
+            </div>
+            <div class="right_code">
+                <pre id="code" class="ace_editor"><textarea class="ace_text-input">{{pre_code}}</textarea></pre>
+            </div>
+        </div>
+        <!-- 提交并且得到结果，并显示 -->
+        <div class="part2">
+            <div class="result"></div>
+            <button class="btn-submit" onclick="submit()">提交代码</button>
+        </div>
+    </div>
+    <script>
+        // 获取用户信息并显示在个人标签
+        document.getElementById('showUserInfoBtn').addEventListener('click', function() {
+            var personalTag = document.getElementById('personal-tag');
+            var sessionId = localStorage.getItem("session_id"); // 获取session-id
+            if (!sessionId) {
+                console.error('没有找到session-id');
+                return;
+            }
+            if (personalTag.style.display === 'none' || personalTag.style.display === '') {
+                // 发送AJAX请求到后端获取数据
+                fetch('/getUserInfo', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'session-id': sessionId // 添加session-id到请求头
+                    }
+                })
+                .then(response => {
+                    console.log('响应状态:', response.status); // 日志响应状态
+                    if (!response.ok) {
+                        throw new Error('网络响应不是OK状态');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('收到的数据:', data); // 日志接收到的数据
+                    if (data.success) {
+                        personalTag.innerHTML = `用户名: ${data.username}<br>管理员角色: ${data.isAdmin ? '是' : '否'}`;
+                    } else {
+                        personalTag.innerHTML = `错误: ${data.error}`;
+                    }
+                    personalTag.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('获取用户信息出错:', error);
+                    personalTag.innerHTML = '获取用户信息失败';
+                    personalTag.style.display = 'block';
+                });
+            } else {
+                personalTag.style.display = 'none';
+            }
+        });
+
+        function logout() {
+            // 只需要删除cookie即可
+            localStorage.removeItem("session_id");
+            location.href = "/";
+        }
+
+        // 初始化ACE编辑器
+        const editor = ace.edit("code");
+
+        // 设置风格和语言（更多风格和语言，请到github上相应目录查看）
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/c_cpp");
+
+        // 字体大小
+        editor.setFontSize(16);
+        // 设置默认制表符的大小:
+        editor.getSession().setTabSize(4);
+
+        // 设置只读（true时只读，用于展示代码）
+        editor.setReadOnly(false);
+
+        // 启用提示菜单
+        ace.require("ace/ext/language_tools");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true
+        });
+
+        function submit() {
+            // 1. 收集当前页面的有关数据, 1. 题号 2.代码
+            var code = editor.getSession().getValue();
+            var number = $(".container .part1 .left_desc h3 #number").text();
+            var judge_url = "/judge/" + number;
+            // 2. 构建json，并通过ajax向后台发起基于http的json请求
+            $.ajax({
+                method: 'POST',
+                url: judge_url,
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8',
+                data: JSON.stringify({
+                    'code': code,
+                    'input': ''
+                }),
+                success: function (data) {
+                    show_result(data);
+                }
+            });
+            // 3. 得到结果，解析并显示到 result中
+            function show_result(data) {
+                var result_div = $(".container .part2 .result");
+                result_div.empty();
+                var _status = data.status;
+                var _reason = data.reason;
+
+                var reason_label = $("<p>", {
+                    text: _reason
+                });
+                reason_label.appendTo(result_div);
+
+                if (_status == 0) {
+                    var _stdout = data.stdout;
+                    var _stderr = data.stderr;
+                    
+                    var stdout_label = $("<pre>", {
+                        text: _stdout
+                    });
+
+                    var stderr_label = $("<pre>", {
+                        text: _stderr
+                    });
+
+                    stdout_label.appendTo(result_div);
+                    stderr_label.appendTo(result_div);
+
+                    console.log('运行成功');
+                    setCompleted(number);
+                }
+            }
+        }
+        function setCompleted(number) {
+            var complete_url = "/setCompleted/" + number;
+            $.ajax({
+                method: 'POST',
+                url: complete_url,
+                dataType: 'json',  // 期望从服务器返回 JSON 格式的响应
+                contentType: 'application/json;charset=utf-8',
+                data: JSON.stringify({}), // 由于你的后端似乎不需要在请求体中发送数据，我们发送一个空的 JSON 对象
+                success: function(response) {
+                    if(response.success) {
+                        console.log('完成状态已成功更新');
+                    } else {
+                        console.log('完成状态更新失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('更新完成状态失败:', error);
+                }
+            });
+        }        
+        // 检测登录状态
+        function checkLoginStatus() {
+            fetch('/check_login', {
+                method: 'GET',
+                credentials: 'include', // 确保携带Cookie
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        const data = text ? JSON.parse(text) : {};
+                        if (data.success === true) {
+                            console.log('用户已登录');
+                        } else {
+                            console.log('用户未登录，需要登录');
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        throw new Error('Failed to parse JSON: ' + error);
+                    }
+                })
+                .catch(error => {
+                    console.error('检测登录状态出错:', error);
+                });
+        }
+
+        // 注销
+        function logout() {
+            fetch('/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.href = '/';
+                    } else {
+                        alert('注销失败');
+                    }
+                })
+                .catch(error => console.error('注销出错:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            checkLoginStatus();
+        });
+    </script>
+</body>
+
+</html>

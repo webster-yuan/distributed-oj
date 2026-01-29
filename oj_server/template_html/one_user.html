@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('image/bgc.png');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+        }
+
+        .user-info, .user-progress {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>用户详情</h2>
+        <div class="user-info">
+            <label>用户名:</label>
+            <span>{{username}}</span>
+            
+            <label>角色:</label>
+            <span>{{isAdmin}}</span>
+        </div>
+
+        <div class="user-progress">
+            <h3>做过的题目记录</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>题目编号</th>
+                        <th>是否完成</th>
+                        <th>完成时间</th>
+                        <th>尝试次数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#user_progress_list}}
+                    <tr>
+                        <td>{{question_number}}</td>
+                        <td>{{isCompleted}}</td>
+                        <td>{{completedTime}}</td>
+                        <td>{{attemptCount}}</td>
+                    </tr>
+                    {{/user_progress_list}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

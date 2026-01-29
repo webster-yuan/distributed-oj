@@ -1,0 +1,9 @@
+CREATE TABLE `User` (
+    `userid` INT PRIMARY KEY AUTO_INCREMENT,
+    `username` VARCHAR(50) UNIQUE NOT NULL,
+    `password` VARCHAR(100) NOT NULL,
+    `salt` VARCHAR(100) NOT NULL,
+    `isAdmin` BOOLEAN DEFAULT FALSE,
+    `CreationTime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `delete_flag` TINYINT  DEFAULT 0 COMMENT '0-正常, 1-删除',
+);

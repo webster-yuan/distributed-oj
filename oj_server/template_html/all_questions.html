@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线OJ-题目列表</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background-image: url('image/bgc.png');
+            /* 设置背景图片 */
+            background-size: cover;
+            /* 背景图片覆盖整个可视区域 */
+            background-position: center;
+            /* 背景图片居中显示 */
+        }
+
+        .container .navbar {
+            width: 100%;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            /* 半透明背景 */
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            /* 添加阴影效果 */
+        }
+
+        .container .navbar a {
+            display: inline-block;
+            width: 100px;
+            /* 调整链接的宽度 */
+            color: white;
+            font-size: large;
+            line-height: 50px;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+            /* 平滑过渡效果 */
+        }
+
+        .container .navbar a:hover {
+            background-color: #4CAF50;
+            /* 鼠标悬停背景色变化 */
+            color: #fff;
+            /* 鼠标悬停字体颜色变化 */
+        }
+
+        .container .navbar .login,
+        .container .navbar .register {
+            float: right;
+        }
+
+        .container .question_list {
+            padding-top: 50px;
+            width: 800px;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        .container .question_list table {
+            width: 100%;
+            font-size: large;
+            margin-top: 50px;
+            background-color: rgb(243, 248, 246);
+        }
+
+        .container .question_list h1 {
+            color: green;
+        }
+
+        .container .footer {
+            width: 100%;
+            height: 50px;
+            text-align: center;
+            line-height: 50px;
+            color: #ccc;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="/">首页</a>
+            <a href="/all_questions">题库</a>
+            <a href="/add_question.html">新增题目</a> <!-- 新增题目链接 -->
+            <a href="/all_users">用户列表</a>
+            <a onclick="logout()">注销</a>
+
+        </div>
+        <div class="question_list">
+            <h1>OnlineJuge题目列表</h1>
+            <table>
+                <tr>
+                    <th class="item">编号</th>
+                    <th class="item">标题</th>
+                    <th class="item">难度</th>
+                    <th class="item">操作</th>
+                    <th class="item">题目状态</th>
+                    <th class="item">提交次数</th>
+                </tr>
+                <!-- 假设后端渲染的题目列表 -->
+                {{#question_list}}
+                <tr>
+                    <td class="item">{{number}}</td>
+                    <td class="item"><a href="/question/{{number}}">{{title}}</a></td>
+                    <td class="item">{{star}}</td>
+                    <td class="item"><a href="javascript:void(0);" onclick="deleteQuestion('{{number}}')">删除</a></td>
+                    <!-- 题目状态和提交次数：调用js函数getUserProgress(number) -->
+                    <td class="item status-cell" data-question-number="{{number}}" id="status_{{number}}">{{status}}
+                    </td>
+                    <td class="item submit-count-cell" data-question-number="{{number}}" id="submit_count_{{number}}">
+                        {{submit_count}}</td>
+                </tr>
+                {{/question_list}}
+            </table>
+        </div>
+        <div class="footer">
+            <h4>@YW</h4>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 题目状态和提交次数：调用js函数getUserProgress(number)
+        function getUserProgress(number) {
+            $.ajax({
+                url: `/getUserProgress/${number}`,
+                method: 'GET',
+                success: function (data) {
+                    // 找到对应的td元素并更新它们的内容  
+                    const $statusCell = $(`#status_${number}`);
+                    const $submitCountCell = $(`#submit_count_${number}`);
+
+                    if (data.success) {
+                        
+                        if (data.completed === true) {
+                            $statusCell.text('已完成');
+                            $statusCell.css('background-color', 'green');
+                            $submitCountCell.text(data.submit_times);
+                            // $submitCountCell.css('background-color', 'green'); // 可能不需要这个，取决于设计  
+                        } else if(data.completed === false){
+                            $statusCell.text('未完成');
+                            $statusCell.css('background-color', 'red');
+                            $submitCountCell.text('0'); // 如果未完成，可能提交次数为0  
+                            // $submitCountCell.css('background-color', 'red'); // 可能不需要这个，取决于设计  
+                        }
+
+                        console.log(data.completed);
+                        console.log(data.submit_times);
+                    } else {
+                        // 处理错误情况  
+                        // ...  
+                        $statusCell.text('未完成');
+                        $statusCell.css('background-color', 'red');
+                        $submitCountCell.text('0'); // 如果未完成，可能提交次数为0  
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    // 处理AJAX请求错误  
+                    console.error('获取用户进度时出错:', textStatus, errorThrown);
+                }
+            });
+        }
+
+        // 页面加载完成后执行  
+        $(document).ready(function () {
+            // 查找.question_list下的表格，并遍历除了表头以外的<tr>元素  
+            $('.question_list table tr:not(:first)').each(function () {
+                // 查找每个<tr>元素中的.status-cell和.submit-count-cell，并获取其data-question-number属性  
+                var $statusCell = $(this).find('.status-cell');
+                var $submitCountCell = $(this).find('.submit-count-cell');
+                var number = $statusCell.data('question-number'); // 假设status-cell始终存在并且包含data-question-number  
+
+                if (number) { // 确保data-question-number存在  
+                    getUserProgress(number);
+                }
+            });
+        });
+
+        function getUserProgress1(number) {
+            // 调用后端接口获取题目状态
+            // url: /getUserProgress/${number}
+            // 需要携带者cookie
+            // 返回值：{success: true, status: 'completed'}
+            //         {success: true, status: 'uncompleted'}
+            // 当获取多个题目的时候，可以用数组存储number，然后一次请求获取多个状态
+            $.ajax({
+                url: `/getUserProgress/${number}`,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                success: function (data) {
+                    if (data.success) {
+                        // status标签显示已完成
+                        if (data.completed == true) {
+                            $(`#status_${number}`).text('已完成');
+                            // 背景设为绿色
+                            $(`#status_${number}`).css('background-color', 'green');
+                            // submit_count标签显示提交次数
+                            $(`#submit_count_${number}`).text(data.submit_count);
+                            // 背景设为绿色
+                            $(`#submit_count_${number}`).css('background-color', 'green');
+
+                            console.log(data.completed);
+                            console.log(data.submit_count);
+                        }
+                    } else {
+                        // status标签显示未完成
+                        $(`#status_${number}`).text('未完成');
+                        // 背景设为红色
+                        $(`#status_${number}`).css('background-color', 'red');
+                        // submit_count标签显示0
+                        $(`#submit_count_${number}`).text('0');
+                        // 背景设为红色
+                        $(`#submit_count_${number}`).css('background-color', 'red');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('获取题目状态失败: 网络错误');
+                }
+            })
+        }
+    </script>
+    <script>
+        function deleteQuestion(number) {
+            fetch(`/deleteQuestion/${number}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('删除成功');
+                        // 重新加载页面或更新DOM以反映删除后的状态
+                        location.reload();
+                    } else {
+                        // 删除失败
+                        if (data.error === "Invalid session") {
+                            alert('请先登录');
+                            window.location.href = '/login.html';
+                        } else {
+                            alert('删除失败: ' + data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败: 网络错误');
+                });
+        }
+    </script>
+    <script>
+        function collectQuestion(number) {
+            fetch(`/collectQuestion/${number}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('收藏成功');
+                        // 重新加载页面或更新DOM以反映收藏后的状态
+                        location.reload();
+                    } else {
+                        // 收藏失败
+                        if (data.error === "Invalid session") {
+                            alert('请先登录');
+                            window.location.href = '/login.html';
+                        } else {
+                            alert('收藏失败: ' + data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('收藏失败: 网络错误');
+                }
+                );
+        }
+    </script>
+    <script>
+        // 注销
+        function logout() {
+            fetch('/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.href = '/';
+                    } else {
+                        alert('注销失败');
+                    }
+                })
+                .catch(error => console.error('注销出错:', error));
+        }
+    </script>
+    <script>
+        // 检测登录状态
+        function checkLoginStatus() {
+            fetch('/check_login', {
+                method: 'GET',
+                credentials: 'include', // 确保携带Cookie
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        const data = text ? JSON.parse(text) : {};
+                        if (data.success === true) {
+                            console.log('用户已登录');
+                        } else {
+                            console.log('用户未登录，需要登录');
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        throw new Error('Failed to parse JSON: ' + error);
+                    }
+                })
+                .catch(error => {
+                    console.error('检测登录状态出错:', error);
+                });
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            checkLoginStatus();
+        });
+    </script>
+</body>
+
+</html>

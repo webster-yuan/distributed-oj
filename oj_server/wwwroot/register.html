@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            background-image: url('image/bgc.png'); /* 添加背景图片，确保路径正确 */
+            background-size: cover; /* 使背景图片覆盖整个页面 */
+            background-position: center; /* 将背景图片居中 */
+            background-repeat: no-repeat; /* 防止背景图片重复 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* 视口高度 */
+        }
+
+        .container {
+            width: 300px;
+            background-color: rgba(255, 255, 255, 0.9); /* 轻微透明的白色背景 */
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 90%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>注册</h2>
+        <form id="register-form" action="/register" method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="submit" value="Register">
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('register-form');
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault(); // 阻止表单默认提交行为
+
+                const formData = new FormData(form); // 获取表单数据
+
+                fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json()) // 假设后端返回 JSON 数据
+                .then(data => {
+                    if (data.success) { // 假设后端返回一个名为 success 的字段表示注册是否成功
+                        alert('注册成功！'); // 注册成功，弹出提示信息
+                        location.href = '/login.html'; // 注册成功后跳转到登录页面
+                    } else {
+                        alert('注册失败，请重试。'); // 注册失败，弹出提示信息
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('出错了，请稍后再试。'); // 请求出错，弹出提示信息
+                });
+            });
+        });
+    </script>
+</body>
+</html>
